@@ -1,79 +1,77 @@
 pipeline {
     agent any
-    
+
+    triggers {
+        githubPush()
     }
+
     stages {
         stage('Checkout') {
             steps {
                 echo "Checkout the code from the GitHub repository"
-                checkout scmGit(branches: [[name: '*/main']], browser: github('https://github.com/veena223070113/Jenkins_6.2C'), extensions: [], userRemoteConfigs: [[url: 'https://github.com/veena223070113/Jenkins_6.2C.git']])
+                checkout([$class: 'GitSCM', branches: [[name: '*/main']], userRemoteConfigs: [[url: 'https://github.com/veena223070113/Jenkins_6.2C.git']]])
             }
         }
 
-        
         stage('Build') {
             steps {
                 echo "Build the code using Maven"
                 echo 'mvn clean package'
             }
         }
-        
+
         stage('Unit and Integration Tests') {
             steps {
                 echo "Run unit tests"
                 echo 'mvn test'
-                
+
                 echo "Run integration tests"
                 echo "Integration test using Postman"
             }
         }
-        
+
         stage('Code Analysis') {
             steps {
                 echo "Integrate SonarQube"
                 echo "Code Analysis using SonarQube analysis command"
             }
         }
-        
+
         stage('Security Scan') {
             steps {
                 echo "Run security scan using OWASP ZAP"
                 echo "Security scan using OWASP ZAP"
             }
         }
-        
+
         stage('Deploy to Staging') {
             steps {
                 echo "Deploy to a staging environment AWS EC2"
             }
         }
-        
+
         stage('Integration Tests on Staging') {
             steps {
                 echo "Run integration tests on the staging environment"
                 echo "Using Selenium for UI tests and JMeter for performance tests"
             }
         }
-        
+
         stage('Deploy to Production') {
             steps {
+                echo "Deploy to a production environment AWS EC2 using appropriate tools"
                 echo "Deploy to a production environment AWS EC2"
             }
         }
     }
-    
+
     post {
-        success {
-            echo "Send a success notification email"
-            emailext subject: 'Pipeline Successful',
-                body: 'The pipeline has completed successfully.',
-                to: "drveena043@gmail.com"
-        }
-        
-        failure {
-            echo "Send a failure notification email"
-            emailext subject: 'Pipeline Failed',
-                body: 'The pipeline has failed. Please check the logs for details.',
-                to: "drveena043@gmail.com"
+        always {
+            echo "Sending a notification email"
+            emailext subject: "Pipeline ${currentBuild.result}",
+                    body: "The pipeline has completed with status: ${currentBuild.result}.",
+                    to: "specified-email@example.com",
+                    attachLog: true
         }
     }
+}
